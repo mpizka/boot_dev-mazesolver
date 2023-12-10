@@ -45,6 +45,10 @@ class Window:
             expand=True,
         )
 
+    # Our app will take care of redrawing by itselfinstead of using a
+    # mainloop(), so we need functions for update/redraw and waiting for the
+    # close signal from the window manager (WM)
+
     def redraw(self):
         """Does a single redraw."""
         self.__root.update_idletasks()
@@ -84,6 +88,9 @@ class Point:
     """A point in a classic canvas-coordinate system.
 
     x=0, y=0 is the upper left corner
+
+    I kinda changes this as well since I wanted to play around with the __add__
+    semantics a little bit. Maybe a bit overengineered at this point.
     """
 
     x: int
@@ -125,12 +132,12 @@ class Cell:
     has_top_wall: bool = True
     has_bottom_wall: bool = True
     # edge length
-    edge_length: int = 20
+    edge: int = 20
 
     def draw(self):
         """Draw cell to the windows canvas."""
         tl = self.top_left
-        w = self.edge_length
+        w = self.edge
         c = "black"
 
         if self.has_left_wall:
@@ -142,14 +149,41 @@ class Cell:
         if self.has_bottom_wall:
             self.win.draw_line(Line(tl + (0, w), tl + (w, w), c))
 
+    def draw_move(self, to_cell, undo=False):
+        other_center = Point(
+            to_cell.top_left.x + to_cell.edge / 2,
+            to_cell.top_left.y + to_cell.edge / 2,
+        )
+        center = Point(
+            self.top_left.x + self.edge / 2,
+            self.top_left.y + self.edge / 2,
+        )
+        line = Line(center, other_center, "grey" if undo else "red")
+        self.win.draw_line(line)
+
 
 # run the application
 if __name__ == "__main__":
     win = Window(800, 600)
+
+    # first couple draw tests
     win.draw_line(Line(Point(100, 100), Point(200, 200), "red"))
     win.draw_line(Line(Point(200, 100), Point(100, 200), "red"))
     Cell(win, Point(90, 90)).draw()
     Cell(win, Point(190, 190), has_left_wall=False).draw()
     Cell(win, Point(190, 90), has_right_wall=False, has_left_wall=False).draw()
     Cell(win, Point(90, 190), has_top_wall=False, has_bottom_wall=False).draw()
+
+    # small grid draw test
+    grid_cells = []
+    top_left = Point(400, 60)
+    n_cells = 64
+    cells_per_row = 4
+    for i in range(n_cells):
+        c = Cell(win, top_left + (20 * (i % cells_per_row), 20 * (i // cells_per_row)))
+        grid_cells.append(c)
+        c.draw()
+    for i in range(len(grid_cells) - 1):
+        grid_cells[i].draw_move(grid_cells[i + 1], bool(i % 2))
+
     win.wait_for_close()
