@@ -11,13 +11,11 @@ import random
 
 from gui import Window
 from geo import Point, Line, Cell
+from maze import Maze
 
 
-# run the application
-if __name__ == "__main__":
-    win = Window(800, 600)
-    canvas = win.get_canvas()
-
+def basic_drawing_test(canvas):
+    """Perform some basic drawing operations to test gui and geo."""
     # Draw a couple of points
     for i in range(900):
         Point(
@@ -69,5 +67,17 @@ if __name__ == "__main__":
     # draw the paths between them
     for i in range(len(path) - 1):
         path[i].draw_move(path[i + 1], i % 2 == 0).draw(canvas)
+
+
+# run the application
+if __name__ == "__main__":
+    win = Window(800, 600)
+    canvas = win.get_canvas()
+
+    # basic shape drawing test
+    # basic_drawing_test(canvas)
+
+    m = Maze(10, 10, 20, 39, 20, win)
+    m.draw_all_cells()
 
     win.wait_for_close()
